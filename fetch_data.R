@@ -2,15 +2,20 @@ suppressPackageStartupMessages({
     library(fs)
     library(optparse)
     library(tidyverse)
+    library(R.utils)
 })
 
 option_list <- list(
-  make_option(c("--output_dir", "-o"),
+  make_option("--output_dir",
     dest="output_dir", type="character",
     help="output directory where files will be saved"),
   make_option("--name",
     type = "character",
     help = "name of the analysis from omnibenchmark"),
+  make_option("--input_dir",
+    dest="input_dir", type="character",
+    default = "OB_GSEA-data_input",
+    help="output directory where files will be saved"),
   make_option("--genesets",
     type = "character",
     help = "name of the genesets for analysis"),
@@ -35,14 +40,25 @@ get_script_dir <- function() {
     dplyr::pull(value) %>%
     dirname(.)
 }
-input_dir <- (file.path(get_script_dir(), "OB_GSEA-data_input"))
+
+
+if (opts$input_dir == "OB_GSEA-data_input") {
+  input_dir <- (file.path(get_script_dir(), opts$input_dir))
+  gcompressed = TRUE
+  gzip_ext = ".gz"
+} else {
+  input_dir <- opts$input_dir
+  gcompressed = FALSE
+  gzip_ext = ""
+}
+
 
 # identify the three required inputs for analysis
 counts <- dir_ls(input_dir,
-                  glob = paste0("*", opts$name, "-counts.tsv"),
+                  glob = paste0("*", opts$name, "-counts.tsv", gzip_ext),
                   recurse = FALSE)
 metadata <- dir_ls(input_dir,
-                  glob = paste0("*", opts$name, "-", opts$genesets, "-metadata.tsv"),
+                  glob = paste0("*", opts$name, "-", opts$genesets, "-metadata.tsv", gzip_ext),
                   recurse = FALSE)
 genesets <- dir_ls(input_dir,
                   glob = paste0("*", opts$genesets, ".gmt"),
@@ -60,6 +76,22 @@ if (!dir.exists(opts$output_dir)) {
 
 # symlink genesets.gmt file
 file.symlink(genesets, path(opts$output_dir, paste0(opts$name, '-GenesetsOI.gmt')))
+
+if (gcompressed) {
+  # if data from github repo, gunzip before symlinking
+  R.utils::gunzip(
+    filename = counts,
+    overwrite = TRUE,
+    remove = FALSE
+  )
+  counts = sub("\\.gz$", "", counts)
+  R.utils::gunzip(
+    filename = metadata,
+    overwrite = TRUE,
+    remove = FALSE
+  )
+  metadata = sub("\\.gz$", "", metadata)
+}
 
 # symlink counts, metadata and reference data based on type of analysis run
 if (opts$wreference == 'VSdf') { # use input df as reference as well = Same-Cohort Reference
