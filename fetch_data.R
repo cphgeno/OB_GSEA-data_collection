@@ -108,8 +108,10 @@ if (opts$wreference == 'VSdf') { # use input df as reference = Same-Cohort Refer
   write.table(rownames_to_column(counts_df, var = 'Geneid'), path(opts$output_dir, paste0(opts$name, '-counts.tsv')), sep = '\t', quote = F, row.names = F)
   write.table(meta %>% filter(!annotation == 'WT'), path(opts$output_dir, paste0(opts$name, '-metadata.tsv')), sep = '\t', quote = F, row.names = F)
 } else { # Universal Reference
-  counts_ref <- dir_ls(input_dir, glob = paste0("UniversalReference-counts.tsv", gzip_ext), recurse = FALSE)
-  if (length(counts_ref) == 0) stop(paste0("No UniversalReference-counts.tsv", gzip_ext, "file found in", input_dir))
+  counts_ref <- dir_ls(input_dir,
+                      regexp = "UniversalReference-counts\\.tsv\\.gz$",
+                      recurse = FALSE)
+  if (length(counts_ref) == 0) stop(paste("No UniversalReference-counts.tsv.gz file found in", input_dir))
   if (gcompressed) {
     R.utils::gunzip(
       filename = counts_ref,
