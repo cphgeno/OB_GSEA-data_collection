@@ -31,14 +31,14 @@ opts <- parse_args(opt_parser)
 
 # get data directory
 get_script_dir <- function() {
-  commandArgs() %>%
-    tibble::enframe(name = NULL) %>%
-    tidyr::separate(
-      col = value, into = c("key", "value"), sep = "=", fill = "right"
-    ) %>%
-    dplyr::filter(key == "--file") %>%
-    dplyr::pull(value) %>%
-    dirname(.)
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- args[grepl("^--file=", args)]
+  if (length(file_arg) == 0) {
+    return(NULL)
+  }
+  script_path <- sub("^--file=", "", file_arg)
+  script_path <- normalizePath(script_path, winslash = "/", mustWork = FALSE)
+  dirname(script_path)
 }
 
 
