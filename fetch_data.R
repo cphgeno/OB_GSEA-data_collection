@@ -94,7 +94,7 @@ if (gcompressed) {
 }
 
 # symlink counts, metadata and reference data based on type of analysis run
-if (opts$wreference == 'VSdf') { # use input df as reference as well = Same-Cohort Reference
+if (opts$wreference == 'VSdf') { # use input df as reference = Same-Cohort Reference
   file.symlink(counts, path(opts$output_dir, paste0(opts$name, '-counts.tsv')))
   file.symlink(metadata, path(opts$output_dir, paste0(opts$name, '-metadata.tsv')))
   file.symlink(counts, path(opts$output_dir, paste0(opts$name, '-REFERENCE-counts.tsv'))) # symlink counts as reference as well
@@ -108,8 +108,16 @@ if (opts$wreference == 'VSdf') { # use input df as reference as well = Same-Coho
   write.table(rownames_to_column(counts_df, var = 'Geneid'), path(opts$output_dir, paste0(opts$name, '-counts.tsv')), sep = '\t', quote = F, row.names = F)
   write.table(meta %>% filter(!annotation == 'WT'), path(opts$output_dir, paste0(opts$name, '-metadata.tsv')), sep = '\t', quote = F, row.names = F)
 } else { # Universal Reference
-  counts_ref <- dir_ls(input_dir, regexp = "UniversalReference-counts\\.tsv$", recurse = FALSE)
-  if (length(counts_ref) == 0) stop(paste("No UniversalReference-counts.tsv file found in", input_dir))
+  counts_ref <- dir_ls(input_dir, glob = paste0("UniversalReference-counts.tsv", gzip_ext), recurse = FALSE)
+  if (length(counts_ref) == 0) stop(paste0("No UniversalReference-counts.tsv", gzip_ext, "file found in", input_dir))
+  if (gcompressed) {
+    R.utils::gunzip(
+      filename = counts_ref,
+      overwrite = TRUE,
+      remove = FALSE
+    )
+  }
+  counts_ref = sub("\\.gz$", "", counts_ref)
   file.symlink(counts_ref, path(opts$output_dir, paste0(opts$name, '-REFERENCE-counts.tsv')))
   file.symlink(counts, path(opts$output_dir, paste0(opts$name, '-counts.tsv')))
   file.symlink(metadata, path(opts$output_dir, paste0(opts$name, '-metadata.tsv')))
