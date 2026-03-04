@@ -57,17 +57,32 @@ if (opts$input_dir == "OB_GSEA-data_input") {
 counts <- dir_ls(input_dir,
                   glob = paste0("*", opts$name, "-counts.tsv", gzip_ext),
                   recurse = FALSE)
+if (length(counts) == 0) {
+  counts <- dir_ls(file.path(get_script_dir(), "OB_GSEA-data_input"),
+                    glob = paste0("*", opts$name, "-counts.tsv", gzip_ext),
+                    recurse = FALSE)
+}
 metadata <- dir_ls(input_dir,
                   glob = paste0("*", opts$name, "-", opts$genesets, "-metadata.tsv", gzip_ext),
                   recurse = FALSE)
+if (length(metadata) == 0) {
+  metadata <- dir_ls(file.path(get_script_dir(), "OB_GSEA-data_input"),
+                    glob = paste0("*", opts$name, "-", opts$genesets, "-metadata.tsv", gzip_ext),
+                    recurse = FALSE)
+}
 genesets <- dir_ls(input_dir,
                   glob = paste0("*", opts$genesets, ".gmt"),
                   recurse = FALSE)
+if (length(genesets) == 0) {
+  genesets <- dir_ls(file.path(get_script_dir(), "OB_GSEA-data_input"),
+                    glob = paste0("*", opts$genesets, ".gmt"),
+                    recurse = FALSE)
+}
 
 # sanity check
-if (length(counts) == 0) stop(paste("No *-counts.tsv file found in", input_dir))
-if (length(metadata) == 0) stop(paste("No *-metadata.tsv file found in", input_dir))
-if (length(genesets) == 0) stop(paste("No *.gmt file found in", input_dir))
+if (length(counts) == 0) stop(paste("No *-counts.tsv file found in", input_dir, "or benchmarking repository"))
+if (length(metadata) == 0) stop(paste("No *-metadata.tsv file found in", input_dir, "or benchmarking repository"))
+if (length(genesets) == 0) stop(paste("No *.gmt file found in", input_dir, "or benchmarking repository"))
 
 
 if (!dir.exists(opts$output_dir)) {
